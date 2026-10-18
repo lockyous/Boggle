@@ -72,7 +72,41 @@ class MyGameManager(BoggleGame):
         If `word` is not present on the board, return None.
         """
         word = word.lower()
-        raise NotImplementedError("method find_word_in_board") # TODO: implement your code here
+        if not word:
+            return None
+
+        #make def for finding next letter from cru path and if find all word return path
+        def find(r, c, word_index, path):
+            if word_index == len(word):
+                return path
+
+            # check nearby cell for next letter without revisiting same cells
+            for next_r in range(r - 1, r + 2):
+                for next_c in range(c - 1, c + 2):
+                    if 0 <= next_r < len(self.board) and 0 <= next_c < len(self.board[0]):
+                        if (next_r, next_c) not in path:
+                            if word[word_index] == self.board[next_r][next_c]:
+                                n_path = path + [(next_r, next_c)]
+                                result = find(next_r, next_c, word_index + 1, n_path)
+
+                                if result is not None:
+                                    return result
+
+            return None
+
+        #finding first letter of word through whole board
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                if self.board[r][c] == word[0]:
+
+                    result = find(r, c, 1, [(r, c)])
+
+                    if result is not None:
+                        return result
+
+        return None
+
+
 
     def add_word(self, word: str) -> int:
         """This method is provided for you, but feel free to change it.
@@ -110,7 +144,13 @@ class MyGameManager(BoggleGame):
         Returns:
             A set containing all words found on the board.
         """
-        raise NotImplementedError("method dictionary_driven_search") # TODO: implement your code here
+        result_words = set()
+        for word in self.dictionary:
+            if len(word) > SHORT and self.find_word_in_board(word) is not None:
+                result_words.add(word)
+
+        return result_words
+
 
     def board_driven_search(self) -> Set[str]:
         """Find all words using a board-driven search.
@@ -122,4 +162,28 @@ class MyGameManager(BoggleGame):
         Returns:
             A set containing all words found on the board.
         """
-        raise NotImplementedError("method board_driven_search") # TODO: implement your code here
+        result_words = set()
+
+        # check if the word vaild and search recursively
+        def find(r, c, cur_word, path):
+            if not self.dictionary.is_prefix(cur_word):
+                return None
+
+            if len(cur_word) > SHORT and self.dictionary.contains(cur_word):
+                result_words.add(cur_word)
+
+            #Expand the word by going to nearby cell without revisiting
+            for next_r in range(r - 1, r + 2):
+                for next_c in range(c - 1, c + 2):
+                    if 0 <= next_r < len(self.board) and 0 <= next_c < len(self.board[0]):
+                        if (next_r, next_c) not in path:
+                            n_word = cur_word + self.board[next_r][next_c]
+                            n_path = path + [(next_r, next_c)]
+                            find(next_r, next_c, n_word, n_path)
+
+        #find all words across the whole board
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                find(r, c, self.board[r][c], [(r, c)])
+
+        return result_words

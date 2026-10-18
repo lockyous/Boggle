@@ -30,8 +30,17 @@ class TrieDictionary(BoggleDictionary):
         with open(filename) as wordsfile:
             for line in wordsfile:
                 word = line.strip().lower()
-                # Do something with word here
-        raise NotImplementedError("method load_dictionary") # TODO: implement your code here
+
+                # create nodes for each letter and mark node as the end of each word
+                cur_trie_node = self.root
+                for char in word:
+                    if char not in cur_trie_node.children:
+                        cur_trie_node.children[char] = TrieNode()
+
+                    cur_trie_node = cur_trie_node.children[char]
+
+                cur_trie_node.is_word = True
+
 
     def traverse(self, prefix: str) -> Optional[TrieNode]:
         """
@@ -39,14 +48,34 @@ class TrieDictionary(BoggleDictionary):
         If there is ever a missing child node, then returns None.
         Otherwise, returns the TrieNode referenced by `prefix`.
         """
-        raise NotImplementedError("method traverse") # TODO: implement your code here
+        cur_trie_node = self.root
+
+        for char in prefix.lower():
+            if char not in cur_trie_node.children:
+                return None
+
+            cur_trie_node = cur_trie_node.children[char]
+        return cur_trie_node
 
     def is_prefix(self, prefix: str) -> bool:
-        raise NotImplementedError("method is_prefix") # TODO: implement your code here
+        cur_trie_node = self.traverse(prefix)
+        return cur_trie_node is not None
+
 
     def contains(self, word: str) -> bool:
-        raise NotImplementedError("method contains") # TODO: implement your code here
+        cur_trie_node = self.traverse(word)
+        if cur_trie_node is None:
+            return False
+        return cur_trie_node.is_word
 
     def __iter__(self) -> typing.Iterator[str]:
-        raise NotImplementedError("method __iter__") # TODO: implement your code here
 
+        #Traverse Tire recursively in alphabetical order and yield complete words
+        def trav_words(cur_trie_node, word):
+            if cur_trie_node.is_word:
+                yield word
+
+            for char in sorted(cur_trie_node.children.keys()):
+                yield from trav_words(cur_trie_node.children[char], word + char)
+
+        return trav_words(self.root, "")
